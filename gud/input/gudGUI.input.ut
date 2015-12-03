@@ -1,0 +1,8 @@
+pro=true
+configNum=1
+interfaceTotalNum=2
+product=daveti
+manufacturer=davejingtian.org
+description=USB DAVETI
+interface[0]=class0:subClass0:protocol0:epNum0
+interface[1]=class1:subClass1:protocol1:epNum1

@@ -1,0 +1,70 @@
+#!/bin/bash
+# USB Profilter HID Analyzer
+# Analyze the usbpro.hid.* report and generate
+# a human readable input for users.
+# NOTE: only USB-HID keyboard is supported now.
+# May 20, 2015
+# root@davejingtian.org
+# http://davejingtian.org
+
+# Config
+hidport=$1
+report=$hidport.analysis
+tmp_file=/tmp/usbpro.hid.analysis
+debug=false
+
+# USB-HID keyboard layout
+# http://www.freebsddiary.org/APC/usb_hid_usages.php
+keyboard=("_" "Err" "POST" "ErrUndef" \
+	"a|A" "b|B" "c|C" "d|D" "e|E" "f|F" "g|G" "h|H" "i|I" "j|J" "k|K" "l|L" "m|M" "n|N" "o|O" "p|P" "q|Q" "r|R" "s|S" "t|T" "u|U" "v|V" "w|W" "x|X" "y|Y" "z|Z" \
+	"1|!" "2|@" "3|#" "4|$" "5|%" "6|^" "7|&" "8|*" "9|(" "0|)" \
+	"ENTER" "ESC" "BACKSPACE" "TAB" "SPACE" \
+	"-|_" "=|+" "[|{" "]|}" "\\||" "NonUS_#|~" ";|:" "'|\"" "GraveAccTilde" ",|<" ".|>" "/|?" \
+	"CapsLock" "F1" "F2" "F3" "F4" "F5" "F6" "F7" "F8" "F9" "F10" "F11" "F12" \
+	"PrintScreen" "ScrollLock" "Pause" "Insert" "Home" "PageUp" "DeleteForward" "End" "PageDown" "RightArrow" "LeftArrow" "DownArrow" "UpArrow" "NumLock|Clear" \
+	"keypad_/" "keypad_*" "keypad_-" "keypad_+" "keypad_ENTER" "keypad_1|End" "keypad_2|DownArrow" "keypad_3|PageDn" "keypad_4|LeftArrow" "keypad_5" "keypad_6|RightArrow" "keypad_7|Home" "keypad_8|UpArrow" "keypad_9|PageUp" "keypad_0|Insert" "keypad_.|Delete" \
+	"NonUS_\\||" "Application" "Power" "keypad_=" \
+	"F13" "F14" "F15" "F16" "F17" "F18" "F19" "F20" "F21" "F22" "F23" "F24" \
+	"Execute" "Help" "Menu" "Select" "Stop" "Again" "Undo" "Cut" "Copy" "Paste" "Find" "Mute" "VolumeUp" "VolumeDown" "LockingCapsLock" "LockingNumLock" "LockingScrollLock" "keypad_COMMA" "keypad_EqualSign" \
+	"Intl1" "Intl2" "Intl3" "Intl4" "Intl5" "Intl6" "Intl7" "Intl8" "Intl9" \
+	"LANG1" "LANG2" "LANG3" "LANG4" "LANG5" "LANG6" "LANG7" "LANG8" "LANG9" \
+	"AlternateErase" "SysReq/Attention" "Cancel" "Clear" "Prior" "Return" "Separator" "Out" "Oper" "Clear/Again" "CrSel/Props" "ExSel" "LeftControl" "LeftShift" "LeftAlt" "LeftGUI" "RightControl" "RightShift" "RightAlt" "RightGUI")
+
+# Debug
+if [ "$debug" = true ]
+then
+	echo "Debug: start preprocessing"
+fi
+
+# Preprocess - extract the streams from the HID report
+awk '/STREAM/{n=NR+1} n>=NR' $hidport | awk 'NR % 2 == 0' > $tmp_file
+
+# Start
+echo "usbpro HID analyzer started:" > $report
+echo "===========================" >> $report
+
+while read line
+do
+	# FIXME: we only focus on the 3rd byte from the left
+	val=`echo $line | cut -d " " -f3 | tr -d " "`
+	idx=`echo $((16#$val))`
+	key=${keyboard[$idx]}
+	if [ "$debug" = true ]
+	then
+		echo "Debug: val["$val"], idx["$idx"], key["$key"]"
+	else
+		# Choose the key
+		# FIXME: always choose the first choice if multiple there
+		key2=`echo $key | cut -d "|" -f1`
+		printf $key2 >> $report
+		if [ "$key2" = "ENTER" ]
+		then
+			printf "\n" >> $report
+		fi
+	fi
+done < $tmp_file
+printf "\n" >> $report
+
+# End
+echo "===========================" >> $report
+echo "usbpro HID analyzer done" >> $report

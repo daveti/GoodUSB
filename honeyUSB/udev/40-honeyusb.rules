@@ -1,0 +1,19 @@
+# udev rules for HoneyUSB to start
+# usbpro automatically
+# May 6, 2015
+# root@davejingtian.org
+# http://davejingtian.org
+
+# Catch any USB devices
+ACTION!="add|change", GOTO="honeyusb_end"
+ENV{DEVTYPE}=="usb_device", GOTO="honeyusb_start"
+SUBSYSTEMS=="usb", GOTO="honeyusb_start"
+GOTO="honeyusb_end"
+
+# HoneyUSB
+LABEL="honeyusb_start"
+
+RUN+="/root/HoneyUSB/usbpro/usbpro $attr{idVendor} $attr{idProduct}"
+
+# Nothing
+LABEL="honeyusb_end"

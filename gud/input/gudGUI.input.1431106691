@@ -1,0 +1,6 @@
+pro=true
+configNum=1
+interfaceTotalNum=1
+product=Nexus 5
+manufacturer=LGE
+interface[0]=vend.:0xff:0x0:3

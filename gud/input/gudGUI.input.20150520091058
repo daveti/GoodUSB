@@ -1,0 +1,8 @@
+pro=false
+configNum=1
+interfaceTotalNum=1
+product=HID Keyboard
+manufacturer=ATMEL AVR
+limitedHidDriver=0
+securityPicIndex=4
+description=USB Storage (thumb drive, portable disk, SD reader)

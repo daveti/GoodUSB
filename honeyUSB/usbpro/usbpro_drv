@@ -1,0 +1,83 @@
+#!/bin/bash
+# USB Profiler Driver helper
+# Profile the drivers of an USB device
+# Called by the usbpro
+# NOTE: this tool needs root permission
+# May 14, 2015
+# Handle none driver and multiple driver lines for iPhone 3GS
+# May 18, 2015
+# root@davejingtian.org
+# http://davejingtian.org
+
+# Config
+report_dir=~/HoneyUSB/report/
+report_name=usbpro.drv
+report=$report_dir$report_name
+max_trial=20
+debug=true
+sexy_lines=-------------------------------
+dev_file=$1
+dev_id=$2
+line_end=$3
+timestamp=$4
+
+# Start
+echo "usbpro driver helper started:" >  $report 2>&1
+echo "=============================" >> $report 2>&1
+
+# Get the driver info
+# NOTE: because usbpro is started so early that the driver is NOT loaded yet,
+# we are NOT able to find any drivers information in this stage!
+driver_line=`usb-devices | sed -n "$line_end"p`
+while [[ $driver_line == "I:"* ]]
+do
+	# Handle this driver line
+	i=0
+	driver_name=`usb-devices | sed -n "$line_end"p | cut -d "=" -f8 | tr -d " "`
+	while [ "$driver_name" = "(none)" ]
+	do
+		# Try to reload the usb-devices
+		driver_name=`usb-devices | sed -n "$line_end"p | cut -d "=" -f8 | tr -d " "`
+		# Prevent infinity loop
+		i=$(($i+1))
+		if [ "$i" -ge "$max_trial" ]
+		then
+			break
+		else
+			sleep 1
+		fi
+	done
+	echo "Kernel Driver Name:" >> $report
+	echo "" >> $report
+	echo "$driver_name" >> $report
+	echo "$sexy_lines" >> $report
+	if [ "$driver_name" = "usbfs" ]
+	then
+		# Find the user-space driver
+		user_driver=`lsof $dev_file 2>&1`
+		echo "User-space Driver:" >> $report
+		echo "" >> $report
+		echo "$user_driver" >> $report
+		echo "$sexy_lines" >> $report
+	fi
+
+	# Handle networking scenarios
+	if [ "$driver_name" = "rndis_host" ]
+	then
+		# Dump the new USB interface
+		# FIXME: we currently hardcode this NIC as usb0.
+		ifconfig usb0 >> $report
+		echo "$sexy_lines" >> $report
+	fi
+
+	# Move to the next line
+	line_end=$(($line_end+1))
+	driver_line=`usb-devices | sed -n "$line_end"p`
+done
+
+# End
+echo "=========================" >> $report 2>&1
+echo "usbpro driver helper done" >> $report 2>&1 
+
+# Rename the report
+mv $report $report.$dev_id.$timestamp 2>&1

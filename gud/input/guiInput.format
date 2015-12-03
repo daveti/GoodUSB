@@ -1,0 +1,15 @@
+# gudGUI Input File Format
+# gud follows this pattern to construct the input file
+# gudGUI follows this pattern to parse the input file
+# Feb 11, 2015
+# root@davejingtian.org
+# http://davejingtian.org
+pro=true|false
+configNum=1|2...
+interfaceTotalNum=1|2...
+product=nameString
+manufacturer=nameString
+# Interface lines are only available when pro=true
+interface[0]=classString:subClassString:protocolString:epNum
+interface[1]=...
+...

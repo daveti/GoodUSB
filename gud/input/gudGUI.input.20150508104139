@@ -1,0 +1,8 @@
+pro=true
+configNum=1
+interfaceTotalNum=1
+product=Nexus 5
+manufacturer=LGE
+limitedHidDriver=0
+securityPicIndex=0
+interface=[0]vend.:0xff:0x0:3,enable[0]

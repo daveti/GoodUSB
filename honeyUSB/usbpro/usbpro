@@ -1,0 +1,297 @@
+#!/bin/bash
+# USB Profiler
+# Profile the activities of an USB device
+# with both low-level (USB packet) and high-level (E.g., HID input) provenance.
+# NOTE: this tool needs root permission
+# Dependencies:
+# udev/mount/modprobe/sysfs/usbmon/lsusb/
+# wireshark/usbhid-dump/tcpdump/lsof/usb-devices
+# hidrd
+# May 13, 2015
+# Handle multiple driver lines for iPhone 3GS
+# May 18, 2015
+# root@davejingtian.org
+# http://davejingtian.org
+
+# Config
+dev_vendor=$1
+dev_product=$2
+honey_dir=/root/HoneyUSB/usbpro
+report_dir=~/HoneyUSB/report/
+report_name=usbpro.rpt
+driver_report_name=usbpro.drv
+report=$report_dir$report_name.$dev_vendor.$dev_product
+driver_report=$report_dir$driver_report_name.$dev_vendor.$dev_product
+usbmon_dir=~/HoneyUSB/report/
+usbmon_name=usbpro.mon
+usbmon_path=/sys/kernel/debug/usb/usbmon/
+monport=$usbmon_dir$usbmon_name.$dev_vendor.$dev_product
+pcap_dir=~/HoneyUSB/report/
+pcap_name=usbpro.pcap
+pcaport=$pcap_dir$pcap_name.$dev_vendor.$dev_product
+dup_dir=~/HoneyUSB/report/
+dup_name=usbpro.dup
+duport=$dup_dir$dup_name
+hid_dir=~/HoneyUSB/report/
+hid_name=usbpro.hid
+hidport=$hid_dir$hid_name.$dev_vendor.$dev_product
+tmp_file=/tmp/usbpro.tmp
+debug=true
+udev_pass_id=true
+hid_enabled=false
+pro_timer=0
+timestamp=$(date +%s)
+sexy_lines=-------------------------------
+# Controllers in Dave's HoneyUSB - idVendor:idProduct
+white_list=("1d6b:0001" "1d6b:0002" "1d6b:0003" "0409:55aa")
+
+
+# Ignore the empty vendor/product for the hub
+if [ "$udev_pass_id" = true ]
+then
+	if [ -z "$dev_vendor" ]
+	then
+		if [ -z "$dev_product" ]
+		then
+			# Record
+			if [ "$debug" = true ]
+			then
+				echo "$timestamp: usbpro ingores non-dev uevent" >> $duport
+			fi
+			# Exit
+			exit
+		fi
+	fi
+
+	# Ignore controller devices
+	for((i=0; i<${#white_list[@]}; i++))
+	do
+		if [ "$dev_vendor:$dev_product" = "${white_list[i]}" ]
+		then
+			# Record
+			if [ "$debug" = true ]
+			then
+				echo "$timestamp: usbpro ingores controller device $dev_vendor:$dev_product" >> $duport
+			fi
+			# Exit
+			exit
+		fi
+	done
+fi
+
+# Avoid multiple calling for the same device
+if [ -f $report ]
+then
+        # Record the dup
+        if [ "$debug" = true ]
+        then
+                echo "$timestamp: usbpro has been started for ID[$dev_vendor:$dev_product]" >> $duport
+        fi
+	# Exit
+        exit
+fi
+
+# Start
+echo "usbpro started:" >  $report 2>&1
+echo "===============" >> $report 2>&1
+if [ "$debug" = true ]
+then
+	echo "$dev_vendor:$dev_product" >> $report 2>&1
+fi
+
+# Get the information for this new device
+dev_bus=""
+dev_num=""
+dev_id=""
+if [ "$udev_pass_id" = false ]
+then
+	lsusb > $tmp_file
+	while read line
+	do
+		# Get the ID
+		VP=`echo $line | cut -d " " -f6 | tr -d " "`
+		if [ "$debug" = true ]
+		then
+			echo "Debug: "$VP >> $report
+		fi
+		# Check for the whitelist
+		filter=false
+		for((i=0; i<${#white_list[@]}; i++))
+		do
+			if [ "$VP" = "${white_list[i]}" ]
+			then
+				filter=true
+				break
+			fi
+		done
+		# Get the device line
+		if [ "$filter" = false ]
+		then
+			dev_bus=`echo $line | cut -d " " -f2 | tr -d " "`
+			dev_num=`echo $line | cut -d " " -f4 | tr -d " " | tr -d ":"`
+			dev_id=$VP
+			break;
+		fi
+	done < $tmp_file
+else
+	dev_id=$dev_vendor:$dev_product
+	lsusb | grep $dev_id > $tmp_file
+	dev_bus=`cat $tmp_file | cut -d " " -f2 | tr -d " "`
+	dev_num=`cat $tmp_file | cut -d " " -f4 | tr -d " " | tr -d ":"`
+fi
+# Debug
+if [ "$debug" = true ]
+then
+	echo "Debug: bus["$dev_bus"], dev["$dev_num"], id["$dev_id"]" >> $report
+fi
+
+# Start usbmon in the background
+bus_num=`echo $dev_bus | tr -d "0"`
+mon_path="$usbmon_path""$bus_num"u
+if [ "$debug" = true ]
+then
+	echo "Debug: usbmon path["$mon_path"]" >> $report
+fi
+mount -t debugfs none_debugfs /sys/kernel/debug 2>&1
+modprobe usbmon 2>&1
+mon_job=`cat $mon_path > $monport &`
+if [ "$debug" = true ]
+then
+	echo "Debug: mon_job["$mon_job"]" >> $report
+fi
+
+# Start HID dump in the background
+lsusb -t | grep Human > $tmp_file
+if [ -s "$tmp_file" ]
+then
+	if [ "$debug" = true ]
+	then
+		echo "Debug: HID helper will be started["$hidport"]" >> $report
+	fi
+	# Enable HID dump
+	hid_enabled=true
+	$honey_dir/usbpro_hid $bus_num $hidport $timestamp &
+fi
+
+# Start tcpdump in the background
+# Rather than listening certain interface, we listen all
+# in case that a new interface is created by the device.
+tcpdump -i any -w $pcaport &
+
+# Generate the final report
+echo "Brief:" >> $report
+echo "" >> $report
+usb-devices > $tmp_file
+vendor_name=""
+product_name=""
+dev_id2=""
+if [ "$udev_pass_id" = true ]
+then
+	vendor_name=$dev_vendor
+	product_name=$dev_product
+	dev_id2=$dev_vendor.$dev_product
+else
+	vendor_name=`echo $dev_id | cut -d ":" -f1 | tr -d " "`
+	product_name=`echo $dev_id | cut -d ":" -f2 | tr -d " "`
+	dev_id2=$vendor_name.$product_name
+fi
+line_num=`cat $tmp_file | grep -n "Vendor=$vendor_name ProdID=$product_name" | cut -d ":" -f1 | tr -d " "`
+# Get the start of the device
+line_start=$(($line_num-2))
+# Get the start of the interface
+line_end=$line_start
+driver_line=`cat $tmp_file | sed -n "$line_end"p`
+while [[ $driver_line != "I:"* ]]
+do
+        line_end=$(($line_end+1))
+        driver_line=`cat $tmp_file | sed -n "$line_end"p`
+done
+driver_start=$line_end
+# Handle multiple driver lines
+driver_line=`cat $tmp_file | sed -n "$line_end"p`
+while [[ $driver_line == "I:"* ]]
+do
+	line_end=$(($line_end+1))
+	driver_line=`cat $tmp_file | sed -n "$line_end"p`
+done
+line_end=$(($line_end-1))
+if [ "$debug" = true ]
+then
+	echo "Debug: line_num["$line_num"], line_start["$line_start"], line_end["$line_end"]" >> $report
+fi
+sed -n "$line_start","$line_end"p $tmp_file >> $report
+echo "$sexy_lines" >> $report
+
+echo "Details:" >> $report
+lsusb -d $dev_id -v >> $report
+echo "$sexy_lines" >> $report
+
+# NOTE: because usbpro is started so early that the driver is NOT loaded yet,
+# we are NOT able to find any drivers information in this stage!
+i=$driver_start
+call_drv=false
+while [ "$i" -le "$line_end" ]
+do
+	driver_name=`sed -n "$i"p $tmp_file | cut -d "=" -f8 | tr -d " "`
+	# And this evil while stops the driver loading:(
+	#while [ "$driver_name" = "(none)" ]
+	#do
+		# Try to reload the usb-devices
+	#	usb-devices > $tmp_file
+	#	driver_name=`sed -n "$line_end"p $tmp_file | cut -d "=" -f8 | tr -d " "`
+	#done
+	echo "Kernel Driver Name:" >> $report
+	echo "" >> $report
+	echo "$driver_name" >> $report
+	if [ "$driver_name" = "(none)" ]
+	then
+		call_drv=true
+	fi
+	echo "$sexy_lines" >> $report
+	# Below is not useful when the driver is not ready~
+	if [ "$driver_name" = "usbfs" ]
+	then
+		# Find the user-space driver
+		user_driver=`lsof /dev/bus/usb/$dev_bus/$dev_num`
+		echo "User-space Driver:" >> $report
+		echo "" >> $report
+		echo "$user_driver" >> $report
+		echo "$sexy_lines" >> $report
+	fi
+	# Move the line
+	i=$(($i+1))
+done	
+
+if [ "$call_drv" = "true" ]
+then
+	echo "Driver is not ready. Please refer to the driver report: "$driver_report >> $report
+	# Call the driver helper
+	$honey_dir/usbpro_drv /dev/bus/usb/$dev_bus/$dev_num $dev_id2 $driver_start $timestamp &
+	echo "$sexy_lines" >> $report
+fi
+
+# End
+echo "USB Packet Dump:" >> $report
+echo "" >> $report
+echo "$monport" >> $report
+echo "$sexy_lines" >> $report
+if [ "$hid_enabled" = true ]
+then
+	echo "USB HID Dump:" >> $report
+	echo "" >> $report
+	echo "$hidport" >> $report
+	echo "$sexy_lines" >> $report
+fi
+echo "Tcpdump Packet Dump:" >> $report
+echo "" >> $report
+echo "$pcaport" >> $report
+echo "===============" >> $report 2>&1
+echo "usbpro done" >> $report 2>&1 
+
+# Sleep for a while to avoid duplicate calling
+sleep $pro_timer
+
+# Rename the report and monport
+mv $report $report.$timestamp 2>&1
+mv $monport $monport.$timestamp 2>&1
+mv $pcaport $pcaport.$timestamp 2>&1

@@ -1,0 +1,41 @@
+NOTE: this is us NOT ms!
+
+fp:
+time in ms min/avg/max/mdev
+8.000000/9.000000/10.000000/0.200000
+
+orig:
+time in ms min/avg/max/mdev
+140266.000000/140423.700000/141001.000000/125.970000
+
+first:
+time in ms min/avg/max/mdev
+146308.000000/147674.500000/149336.000000/608.800000
+
+sec:
+time in ms min/avg/max/mdev
+146306.000000/147462.550000/149268.000000/557.505000
+
+honey:
+time in ms min/avg/max/mdev
+248951.000000/262057.000000/295444.000000/6841.636364
+
+====================================================
+
+orig-storage:
+time in ms min/avg/max/mdev
+3269.000000/3761.150000/4321.000000/161.035000
+
+sec-storage:
+time in ms min/avg/max/mdev
+3515.000000/3953.800000/4540.000000/176.020000
+
+
+orig-nexuss:
+time in ms min/avg/max/mdev
+1996.000000/2275.050000/2629.000000/107.465000
+
+sec-nexuss:
+time in ms min/avg/max/mdev
+2211.000000/2442.150000/2772.000000/145.050000
+

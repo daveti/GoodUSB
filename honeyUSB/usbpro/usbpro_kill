@@ -1,0 +1,27 @@
+#!/bin/bash
+# USB Profiler Killer
+# Kill background jobs started by usbpro
+# NOTE: this tool needs root permission
+# May 14, 2015
+# root@davejingtian.org
+# http://davejingtian.org
+
+# Start
+echo "usbpro killer started:"
+echo "======================"
+
+# Kill usbmon
+ps -ef | grep -v grep | grep -i usbmon | awk '{print $2}' | xargs kill -9
+echo "All usbmon are killed."
+
+# Kill hiddump
+ps -ef | grep -v grep | grep -i usbhid-dump | awk '{print $2}' | xargs kill -9
+echo "All hiddump are killed."
+
+# Kill tcpdump 
+ps -ef | grep -v grep | grep -i tcpdump | awk '{print $2}' | xargs kill -9
+echo "All tcpdump are killed."
+
+# End
+echo "======================"
+echo "usbpro killer done"

@@ -1,0 +1,15 @@
+usbpro driver helper started:
+=============================
+Kernel Driver Name:
+
+usbfs
+-------------------------------
+User-space Driver:
+
+lsof: WARNING: can't stat() fuse.gvfsd-fuse file system /run/user/1000/gvfs
+      Output information may be incomplete.
+COMMAND     PID   USER   FD   TYPE  DEVICE SIZE/OFF   NODE NAME
+gvfsd-mtp 27148 daveti   15u   CHR 189,134      0t0 116464 /dev/bus/usb/002/007
+-------------------------------
+=========================
+usbpro driver helper done

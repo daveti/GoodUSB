@@ -1,0 +1,11 @@
+pro=true
+configNum=1
+interfaceTotalNum=4
+product=Logitech USB Headset
+manufacturer=Logitech
+limitedHidDriver=1
+securityPicIndex=0
+interface=[0]audio:0x1:0x0:0,enable[1]
+interface=[1]audio:0x2:0x0:0,enable[1]
+interface=[2]audio:0x2:0x0:0,enable[1]
+interface=[3]HID:0x0:0x0:1,enable[1]

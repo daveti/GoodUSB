@@ -1,0 +1,6 @@
+pro=true
+configNum=1
+interfaceTotalNum=1
+product=Dell USB Keyboard
+manufacturer=Dell
+interface[0]=HID:0x1:0x1:1

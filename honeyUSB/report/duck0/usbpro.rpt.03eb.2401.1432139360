@@ -1,0 +1,102 @@
+usbpro started:
+===============
+03eb:2401
+Debug: bus[001], dev[016], id[03eb:2401]
+Debug: usbmon path[/sys/kernel/debug/usb/usbmon/1u]
+Debug: mon_job[]
+Debug: HID helper will be started[/root/HoneyUSB/report/usbpro.hid.03eb.2401]
+Brief:
+
+Debug: line_num[31], line_start[29], line_end[35]
+T:  Bus=01 Lev=03 Prnt=11 Port=04 Cnt=01 Dev#= 16 Spd=12  MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS= 8 #Cfgs=  1
+P:  Vendor=03eb ProdID=2401 Rev=02.01
+S:  Manufacturer=ATMEL AVR
+S:  Product=HID Keyboard
+C:  #Ifs= 1 Cfg#= 1 Atr=a0 MxPwr=100mA
+I:  If#= 0 Alt= 0 #EPs= 1 Cls=03(HID  ) Sub=01 Prot=01 Driver=usbfs
+-------------------------------
+Details:
+
+Bus 001 Device 016: ID 03eb:2401 Atmel Corp. 
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0         8
+  idVendor           0x03eb Atmel Corp.
+  idProduct          0x2401 
+  bcdDevice            2.01
+  iManufacturer           1 ATMEL AVR
+  iProduct                2 HID Keyboard
+  iSerial                 0 
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength           34
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          0 
+    bmAttributes         0xa0
+      (Bus Powered)
+      Remote Wakeup
+    MaxPower              100mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           1
+      bInterfaceClass         3 Human Interface Device
+      bInterfaceSubClass      1 Boot Interface Subclass
+      bInterfaceProtocol      1 Keyboard
+      iInterface              0 
+        HID Device Descriptor:
+          bLength                 9
+          bDescriptorType        33
+          bcdHID               1.11
+          bCountryCode            0 Not supported
+          bNumDescriptors         1
+          bDescriptorType        34 Report
+          wDescriptorLength      59
+         Report Descriptors: 
+           ** UNAVAILABLE **
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0008  1x 8 bytes
+        bInterval               2
+Device Status:     0x0000
+  (Bus Powered)
+-------------------------------
+Kernel Driver Name:
+
+usbfs
+-------------------------------
+User-space Driver:
+
+COMMAND    PID USER   FD   TYPE DEVICE SIZE/OFF    NODE NAME
+usbhid-du 7654 root   11u   CHR 189,15      0t0 5236670 /dev/bus/usb/001/016
+-------------------------------
+USB Packet Dump:
+
+/root/HoneyUSB/report/usbpro.mon.03eb.2401
+-------------------------------
+USB HID Dump:
+
+/root/HoneyUSB/report/usbpro.hid.03eb.2401
+-------------------------------
+Tcpdump Packet Dump:
+
+/root/HoneyUSB/report/usbpro.pcap.03eb.2401
+===============
+usbpro done

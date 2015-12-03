@@ -1,0 +1,74 @@
+#!/bin/bash
+# USB Profiler HID helper
+# Dump the HID descriptors and streams of an USB HID device
+# Called by the usbpro
+# NOTE: this tool needs root permission
+# May 15, 2015
+# root@davejingtian.org
+# http://davejingtian.org
+
+# Config
+tmp_file=/tmp/usbpro_hid.tmp
+debug=true
+driver_ready=false
+direct_dump=true
+sexy_lines=-------------------------------
+bus_num=$1
+report=$2
+timestamp=$3
+
+if [ "$direct_dump" = false ]
+then
+	# Make sure usbhid driver is loaded before we do dump
+	# The tricky thing for rubber ducky is that usbhid-dump
+	# would trigger usbfs rather than usbhid....
+	while [ "$driver_ready" = false ]
+	do
+		# Hack
+		driver_ready=true
+
+		lsusb -t | grep Human > $tmp_file
+		while read line
+		do
+			# Get the driver name
+			driver=`echo $line | awk -F "Driver=" '{print $2}' | cut -d "," -f1 | tr -d " "`
+			# Update the flag
+			if [ "$driver" != "usbhid" ]
+			then
+				driver_ready=false
+				# Break to save time
+				break
+			fi
+		done < $tmp_file
+	done
+else
+	# Let us start regardless of the driver
+	lsusb -t | grep Human > $tmp_file
+fi
+
+# Note that we could have multiple HID interfaces within one device
+while read line
+do
+	# Get the device number
+	dev_num=`echo $line | awk -F "Dev" '{print $2}' | cut -d "," -f1 | tr -d " "`
+	report=$report.$dev_num
+
+	echo "usbpro HID helper started:" >  $report 2>&1
+	echo "=============================" >> $report 2>&1
+
+	# Debug
+	if [ "$debug" = true ]
+	then
+		driver=`echo $line | awk -F "Driver=" '{print $2}' | cut -d "," -f1 | tr -d " "`
+		echo "Debug: bus_num["$bus_num"], dev_num["$dev_num"], driver["$driver"]" >> $report
+	fi
+
+	# Start
+	usbhid-dump -a$bus_num:$dev_num -i0 | grep -v : | xxd -r -p | hidrd-convert -o spec >> $report
+	echo "$sexy_lines" >> $report
+	usbhid-dump -a$bus_num:$dev_num -eall -t0 >> $report &
+	# End - should be killed by usbpro_kill
+
+	mv $report $report.$timestamp
+done < $tmp_file
+

@@ -1,0 +1,23 @@
+usbpro driver helper started:
+=============================
+Kernel Driver Name:
+
+(none)
+-------------------------------
+Kernel Driver Name:
+
+usbfs
+-------------------------------
+User-space Driver:
+
+lsof: WARNING: can't stat() fuse.gvfsd-fuse file system /run/user/1000/gvfs
+      Output information may be incomplete.
+COMMAND   PID   USER   FD   TYPE  DEVICE SIZE/OFF     NODE NAME
+usbmuxd 32380 usbmux   14u   CHR 189,137      0t0 11231190 /dev/bus/usb/002/010
+-------------------------------
+Kernel Driver Name:
+
+ipheth
+-------------------------------
+=========================
+usbpro driver helper done

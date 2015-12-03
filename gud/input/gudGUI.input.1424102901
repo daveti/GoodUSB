@@ -1,0 +1,7 @@
+pro=true
+configNum=1
+interfaceTotalNum=2
+product=Yubikey NEO OTP+CCID
+manufacturer=Yubico
+interface[0]=HID:0x1:0x1:1
+interface[1]=scard:0x0:0x0:3

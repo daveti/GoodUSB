@@ -1,0 +1,14 @@
+# A gudGUIsec input file for UT
+# Apr 23, 2015
+# root@davejingtian.org
+# http://davejingtian.org
+pro=true
+configNum=1
+interfaceTotalNum=2
+product=daveti
+manufacturer=davejingtian.org
+limitedHidDriver=1
+securityPicIndex=5
+description=Com'on baby~
+interface=[0]class0:subClass0:protocol0:epNum0,enable[1]
+interface=[1]class1:subClass1:protocol1:epNum1,enable[1]

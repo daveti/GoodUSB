@@ -1,0 +1,15 @@
+Lenovo ThinkCentre
+Intel(R) Core(TM)2 Duo CPU     E8400  @ 3.00GHz
+4GB Mem
+Ubuntu 14.04 LTS
+Linux daveti-ThinkCentre-M58e 3.13.11.11-daveti-goodusb #27 SMP Wed May 27 09:47:19 PDT 2015 x86_64 x86_64 x86_64 GNU/Linux
+
+HoneyUSB
+QEMU-KVM
+VCPU 2
+Mem 2GB
+Ubuntu 14.04 LTS
+
+Logitech USB Headset
+4 interfaces
+3 audio, 1 HID
